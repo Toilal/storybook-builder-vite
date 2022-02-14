@@ -20,6 +20,7 @@
     "example:react-ts": "NAME=react-ts yarn example",
     "example:svetle": "NAME=svetle yarn example",
     "example:vue": "NAME=vue yarn example",
+    "example:vue2": "NAME=vue2 yarn example",
     "example:workspaces": "NAME=workspaces yarn example"
   },
   "workspaces": [
@@ -27,6 +28,7 @@
     "packages/example-react-ts",
     "packages/example-svelte",
     "packages/example-vue",
+    "packages/example-vue2",
     "packages/example-workspaces",
     "packages/storybook-builder-vite"
   ],

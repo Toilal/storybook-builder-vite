@@ -18,6 +18,8 @@ export async function commonConfig(
   options: ExtendedOptions,
   _type: PluginConfigType
 ): Promise<UserConfig & { configFile: false; root: string }> {
+  const { framework } = options;
+
   return {
     configFile: false,
     root: path.resolve(options.configDir, '..'),
@@ -26,7 +28,7 @@ export async function commonConfig(
     define: {},
     resolve: {
       alias: {
-        vue: 'vue/dist/vue.esm-bundler.js',
+        vue: framework === 'vue' ? 'vue/dist/vue.esm.js' : 'vue/dist/vue.esm-bundler.js',
       },
     },
     plugins: await pluginConfig(options, _type),
@@ -35,6 +37,7 @@ export async function commonConfig(
 
 export async function pluginConfig(options: ExtendedOptions, _type: PluginConfigType) {
   const { framework, presets } = options;
+
   const svelteOptions = await presets.apply('svelteOptions', {}, options);
 
   const plugins = [
@@ -44,7 +47,22 @@ export async function pluginConfig(options: ExtendedOptions, _type: PluginConfig
     mdxPlugin(),
     injectExportOrderPlugin,
   ] as Plugin[];
-  if (framework === 'vue' || framework === 'vue3') {
+  if (framework === 'vue') {
+    try {
+      const { createVuePlugin } = require('vite-plugin-vue2');
+      plugins.push(createVuePlugin());
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== 'MODULE_NOT_FOUND') {
+        throw new Error(
+          'storybook-builder-vite requires vite-plugin-vue2 to be installed ' +
+            'when using @storybook/vue' +
+            '  Please install it and start storybook again.'
+        );
+      }
+      throw err;
+    }
+  }
+  if (framework === 'vue3') {
     try {
       const vuePlugin = require('@vitejs/plugin-vue');
       plugins.push(vuePlugin());
@@ -54,7 +72,7 @@ export async function pluginConfig(options: ExtendedOptions, _type: PluginConfig
       if ((err as NodeJS.ErrnoException).code !== 'MODULE_NOT_FOUND') {
         throw new Error(
           'storybook-builder-vite requires @vitejs/plugin-vue to be installed ' +
-            'when using @storybook/vue or @storybook/vue3.' +
+            'when using @storybook/vue3.' +
             '  Please install it and start storybook again.'
         );
       }
